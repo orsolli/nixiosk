@@ -42,9 +42,9 @@ in {
   };
 
   # Ignore cec power key
-  services.logind.extraConfig = lib.optionalString config.nixiosk.raspberryPi.cecSupport ''
-    HandlePowerKey = ignore
-  '';
+  /* TODO: services.logind.settings.Login = lib.optional config.nixiosk.raspberryPi.cecSupport {
+    HandlePowerKey = "ignore";
+  };*/
 
   systemd.services.cec-poweroff-tv = {
     enable = config.nixiosk.raspberryPi.cecSupport;
@@ -59,12 +59,12 @@ in {
 
   environment.systemPackages = lib.optional config.nixiosk.raspberryPi.cecSupport pkgs.libcec;
 
+  # set tsched=0 in pulseaudio config to avoid audio glitches
+  # see https://wiki.archlinux.org/title/PulseAudio/Troubleshooting#Glitches,_skips_or_crackling
+  services.pulseaudio.configFile = lib.mkOverride 990 (pkgs.runCommand "default.pa" {} ''
+    sed 's/module-udev-detect$/module-udev-detect tsched=0/' ${config.services.pulseaudio.package}/etc/pulse/default.pa > $out
+  '');
   hardware = {
-    # set tsched=0 in pulseaudio config to avoid audio glitches
-    # see https://wiki.archlinux.org/title/PulseAudio/Troubleshooting#Glitches,_skips_or_crackling
-    pulseaudio.configFile = lib.mkOverride 990 (pkgs.runCommand "default.pa" {} ''
-      sed 's/module-udev-detect$/module-udev-detect tsched=0/' ${config.hardware.pulseaudio.package}/etc/pulse/default.pa > $out
-    '');
 
     deviceTree = {
       filter = "*rpi*.dtb";
@@ -261,7 +261,7 @@ in {
   # environment.systemPackages = [ pkgs.raspberrypi-tools ];
 
   boot = {
-    tmpOnTmpfs = true;
+    tmp.useTmpfs = true;
     kernelPackages = {
       raspberryPi0 = pkgs.linuxPackages_rpi0;
       raspberryPi1 = pkgs.linuxPackages_rpi1;
@@ -288,16 +288,13 @@ in {
   nixpkgs.overlays = [(self: super: lib.optionalAttrs (super.stdenv.hostPlatform != super.stdenv.buildPlatform) {
     # Restrict drivers built by mesa to just the ones we need This
     # reduces the install size a bit.
-    mesa = (super.mesa.override {
+    /*mesa = (super.mesa.override {
       vulkanDrivers = [];
-      driDrivers = [];
       galliumDrivers = ["v3d" "vc4"];
       withValgrind = false;
-      enableOSMesa = false;
-      enableGalliumNine = false;
     }).overrideAttrs (o: {
       mesonFlags = (o.mesonFlags or []) ++ ["-Dglx=disabled"];
-    });
+    });*/
 
     libcec = super.libcec.override { inherit (super) libraspberrypi; };
 
@@ -325,21 +322,8 @@ in {
   }.${config.nixiosk.hardware} or (throw "No known crossSystem for ${config.nixiosk.hardware}.");
 
   boot.loader.grub.enable = false;
-  boot.loader.raspberryPi = {
+  boot.loader.generic-extlinux-compatible ={
     enable = true;
-    version = {
-      raspberryPi0 = 0;
-      raspberryPi1 = 1;
-      raspberryPi2 = 2;
-      raspberryPi3 = 3;
-      raspberryPi4 = 4;
-    }.${config.nixiosk.hardware} or (throw "No known raspberrypi version for ${config.nixiosk.hardware}.");
-
-    uboot.enable = ubootEnabled;
-
-    firmwareConfig = lib.optionalString pkgs.stdenv.hostPlatform.isAarch64 ''
-      arm_64bit=1
-    '' + lib.optionalString (config.nixiosk.raspberryPi.firmwareConfig != null) config.nixiosk.raspberryPi.firmwareConfig;
   };
 
   fileSystems = lib.mkForce (if ubootEnabled then {

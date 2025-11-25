@@ -4,6 +4,7 @@ let
   extlinux-conf-builder =
     import (modulesPath + "/system/boot/loader/generic-extlinux-compatible/extlinux-conf-builder.nix") {
       pkgs = pkgs.buildPackages;
+      inherit lib;
     };
   configTxt = pkgs.writeText "config.txt" (''
     [pi0]
@@ -22,11 +23,10 @@ let
     kernel=u-boot-rpi4.bin
 
     [all]
-  '' + config.boot.loader.raspberryPi.firmwareConfig);
+    arm_64bit=1
+  '');
 in {
   imports = [ (modulesPath + "/installer/sd-card/sd-image.nix") ];
-
-  boot.loader.raspberryPi.enable = lib.mkForce false;
 
   sdImage = {
     compressImage = false;
@@ -56,7 +56,7 @@ in {
         cp ${pkgs.raspberrypi-armstubs}/armstub8-gic.bin firmware/armstub8-gic.bin
       '';
     }.${pkgs.stdenv.hostPlatform.system} or (throw "unknown raspberry pi system (${pkgs.stdenv.hostPlatform.system})");
-    imageBaseName = "${config.nixiosk.hostName}-${config.nixiosk.hardware}";
   };
+  image.baseName = "${config.nixiosk.hostName}-${config.nixiosk.hardware}";
 
 }

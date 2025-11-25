@@ -8,16 +8,16 @@
     ./hardware/all.nix # used for iso and pxe
   ];
 
-  hardware.opengl.enable = true;
+  hardware.graphics.enable = true;
   #hardware.bluetooth.enable = true;
   #sound.enable = true;
-  #hardware.pulseaudio.enable = true;
+  services.pulseaudio.enable = true;
   services.dbus.enable = true;
 
   # theming
   gtk.iconCache.enable = true;
   environment.systemPackages = [
-    pkgs.gnome3.adwaita-icon-theme pkgs.hicolor-icon-theme
+    pkgs.adwaita-icon-theme pkgs.hicolor-icon-theme
 
     (pkgs.git.override {
       withManual = false;
@@ -28,14 +28,28 @@
   ];
 
   # input
-  services.udev.packages = [ pkgs.libinput.out ];
+  #services.udev.packages = [ pkgs.libinput.out ];
 
-  nix.binaryCachePublicKeys = ["nixiosk.cachix.org-1:A4kH9p+y9NjDWj0rhaOnv3OLIOPTbjRIsXRPEeTtiS4="];
-  nix.binaryCaches = ["https://nixiosk.cachix.org"];
+  nix.settings.trusted-public-keys = ["nixiosk.cachix.org-1:A4kH9p+y9NjDWj0rhaOnv3OLIOPTbjRIsXRPEeTtiS4="];
+  nix.settings.substituters = ["https://nixiosk.cachix.org"];
+
+  # Add other build servers
+  nix.buildMachines = [
+    {
+      hostName = "129.151.208.169"; # 129.151.208.169 OracleVM
+      system = "aarch64-linux";
+      protocol = "ssh-ng";
+      sshUser = "ubuntu";
+      sshKey = "/etc/ssh/ssh_host_rsa_key";
+      publicHostKey = "c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFCZ1FEVktHN0hmWXVobUtFNzNKZTNESDJMQlp5aDFaYzVpY21aWVdPV2FlMGdpK3JjcXRuUnJZS1FUVGc1Snk1aE94dW9PTzcrc25SeldZRnlDQUxhY3VmNnFBQWk2WXBIS2ZUcURaVERab3NsbktKSnNCZEtLYW8vREcxcWpXekFSY0pQeW5MMHoxWW1QRTJsZWhwWjZWam4vc0c1dTlOS0h4VGRuV0FvR3ArbzFsc0kvS0dveGZoR0V0ZmxMMWVUMm5jR2xRUE41R0ZYMWI5M21iQWpwaXNvNkhUemZOdndyaDZRcHc0U1dtU3l2dzBLOFVhYW9acjdVWWF1WjlESncxYkxIeXR5UUljNFVCSVRJYkxRY3pvSzYrUjJ0c1VEWEhlbnVyYzJuTlZieHFacThmWFVRK3k3SG5reEgvdCtvV2l5eEhIZ3JUZmpVck8rbE9LVW4xZUppMjQrRkRSam9CNGhPekxlNU5Oc3hxaGorS3dsZHIxdk1IM2UveEdBN3NiZW44d3BGa3pOdnArd05NSFY1cUxaSlg4aGVnOTNnaGg5TW1DdzR5R1hLWldyRTl1RW5hQXVNWnZ1MXJLVzVnZy9qUmIwWThLaks3VlBqR2RBZVp3dVp3YXRyZ1NjbjRFNzdzcDZOMWI0N2tjNHdFYkxPMHczWVlHb2JVWGpHSDA9IHJvb3RAaW5zdGFuY2UtMjAyMzA3MDQtMjEwNAo=";
+      maxJobs = 4;
+	    #supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
+    }
+  ];
 
   services.openssh = {
     enable = true;
-    permitRootLogin = "without-password";
+    settings.PermitRootLogin = "without-password";
     startWhenNeeded = true;
   };
 
@@ -73,7 +87,7 @@
 
   services.avahi = {
     enable = true;
-    nssmdns = true;
+    nssmdns4 = true;
     publish = {
       enable = true;
       userServices = true;
@@ -120,8 +134,8 @@
       };
 
       # doesn’t cross compile
-      libass = super.libass.override { encaSupport = false; };
-      libproxy = super.libproxy.override { networkmanager = null; };
+      #libass = super.libass.override { encaSupport = false; };
+      #libproxy = super.libproxy.override { networkmanager = null; };
       enchant2 = super.enchant2.override { hspell = null; };
       cage = super.cage.override { xwayland = null; };
 
@@ -130,7 +144,6 @@
       portaudio = super.portaudio.override { libjack2 = null; };
 
       ffmpeg_4 = super.ffmpeg_4.override ({
-        sdlSupport = false;
         # some ffmpeg libs are compiled with neon which rpi0 doesn’t support
       } // lib.optionalAttrs (super.stdenv.hostPlatform.parsed.cpu.name == "armv6l") {
         libopus = null;
@@ -139,7 +152,6 @@
         soxr = null;
       });
       ffmpeg = super.ffmpeg.override ({
-        sdlSupport = false;
       } // lib.optionalAttrs (super.stdenv.hostPlatform.parsed.cpu.name == "armv6l") {
         libopus = null;
         x264 = null;
@@ -147,7 +159,7 @@
         soxr = null;
       });
 
-      mesa = super.mesa.override { eglPlatforms = ["wayland"]; };
+      #mesa = super.mesa.override { eglPlatforms = ["wayland"]; };
 
       kodi = super.kodi.override {
         sambaSupport = false;
@@ -211,8 +223,8 @@
   boot.plymouth.enable = true;
   boot.plymouth.logo = pkgs.fetchurl {
     url = "https://oasenkirka.no/wp-content/uploads/2015/02/cropped-oasensol-3d_500px.png";
-    sha256 = "0c5146e342db5d4d8ac67eb20d0d6b4dcebfd732ff7d76d1ef8654f08c4bc6aa";
-  }
+    sha256 = "sha256-MIPTwUguxFStGTS6iNoZ+nlbo8evFrtnNDL/aBDqFkw=";
+  };
   boot.kernelParams = [ "rd.udev.log_priority=3" "vt.global_cursor_default=0" ];
 
   networking.dhcpcd.extraConfig = ''

@@ -98,7 +98,7 @@
       sshKey = "/etc/ssh/ssh_host_rsa_key";
     };
     users.users.root.openssh.authorizedKeys.keys = config.nixiosk.authorizedKeys;
-    services.cage.program = "${lib.getBin package}${config.nixiosk.program.executable} ${toString (config.nixiosk.program.args)}";
+    # services.cage.program = "${lib.getBin package}${config.nixiosk.program.executable} ${toString (config.nixiosk.program.args)}";
     environment.systemPackages = [ package ];
     systemd.packages = [ package ];
     services.dbus.packages = [ package ];

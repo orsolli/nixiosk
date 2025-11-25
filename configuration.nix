@@ -9,9 +9,9 @@
   ];
 
   hardware.opengl.enable = true;
-  hardware.bluetooth.enable = true;
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
+  #hardware.bluetooth.enable = true;
+  #sound.enable = true;
+  #hardware.pulseaudio.enable = true;
   services.dbus.enable = true;
 
   # theming
@@ -44,7 +44,7 @@
     useDefaultShell = true;
   };
 
-  systemd.services."cage@" = {
+  /*systemd.services."cage@" = {
     serviceConfig.Restart = "always";
     environment = {
       WLR_LIBINPUT_NO_DEVICES = "1";
@@ -53,7 +53,7 @@
     } // lib.optionalAttrs (config.environment.variables ? GDK_PIXBUF_MODULE_FILE) {
       GDK_PIXBUF_MODULE_FILE = config.environment.variables.GDK_PIXBUF_MODULE_FILE;
     };
-  };
+  };*/
 
   systemd.enableEmergencyMode = false;
   systemd.services."serial-getty@ttyS0".enable = false;
@@ -66,10 +66,10 @@
   powerManagement.enable = false;
   programs.command-not-found.enable = false;
 
-  services.cage = {
+  /*services.cage = {
     enable = true;
     user = "kiosk";
-  };
+  };*/
 
   services.avahi = {
     enable = true;
@@ -209,6 +209,10 @@
   };
 
   boot.plymouth.enable = true;
+  boot.plymouth.logo = pkgs.fetchurl {
+    url = "https://oasenkirka.no/wp-content/uploads/2015/02/cropped-oasensol-3d_500px.png";
+    sha256 = "0c5146e342db5d4d8ac67eb20d0d6b4dcebfd732ff7d76d1ef8654f08c4bc6aa";
+  }
   boot.kernelParams = [ "rd.udev.log_priority=3" "vt.global_cursor_default=0" ];
 
   networking.dhcpcd.extraConfig = ''

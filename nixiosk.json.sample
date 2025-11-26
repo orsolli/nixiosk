@@ -1,9 +1,12 @@
 {
-    "hostName": "nixiosk",
-    "hardware": "qemu-no-virtfs",
+    "hostName": "oasenkiosk",
+    "hardware": "raspberryPi3",
     "program": {
-        "package": "cog",
-        "executable": "/bin/cog",
+        "package": "ungoogled-chromium",
+        "executable": "/bin/chromium",
         "args": ["https://en.wikipedia.org/"]
+    },
+    "raspberryPi": {
+        "cecSupport": false
     }
 }
